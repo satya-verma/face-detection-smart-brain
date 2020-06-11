@@ -3,13 +3,15 @@ import '../containers/App.css';
 import Navigation from '../components/navigation/Navigation';
 import Logo from '../components/logo/Logo';
 import ImageURLForm from '../components/imageUrlForm/ImageURLForm';
+import Rank from '../components/rank/Rank';
 
 class App extends React.Component {
   render() {
     return (
-      <div className="App">
+      <div className="App tc">
         <Navigation />
         <Logo />
+        <Rank/>
         <ImageURLForm />
         {/*<FaceRecognition /> */}
       </div>
