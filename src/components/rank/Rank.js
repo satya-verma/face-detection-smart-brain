@@ -1,9 +1,10 @@
 import React from 'react';
 
 const Rank = () => {
-    return(
+    return (
         <div className="tc">
-            <p className = "f3 fw7">{'Your Rank Is #1'}</p>
+            <p className="f3 mt0 white">{'Satya Your Rank Is'}</p>
+            <p className="f2 mt0 mb0 white">{'#1'}</p>
         </div>
     );
 }
