@@ -95,10 +95,8 @@ class App extends React.Component {
     this.setState({ route: route })
   }
 
-  /*  
-  receives a {state.route} parameter and returns signIn, signUp or Home page components accordingly which 
-  are then rendered inside the render fucntion.
-  */
+    
+  //receives a {state.route} parameter and switches between signIn, signUp and home screen components
   renderSwitch = (param) => {
     const { imageUrl, box } = this.state;
     switch (param) {
