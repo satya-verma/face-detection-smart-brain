@@ -1,5 +1,4 @@
 import React from 'react';
-import '../containers/App.css';
 import Navigation from '../components/navigation/Navigation';
 import Logo from '../components/logo/Logo';
 import ImageURLForm from '../components/imageUrlForm/ImageURLForm';
@@ -7,9 +6,10 @@ import Rank from '../components/rank/Rank';
 import Particles from 'react-particles-js';
 import Clarifai from 'clarifai';
 import FaceRecognition from '../components/face_recognition_box/FaceRecognition';
+import '../containers/App.css';
 
 const app = new Clarifai.App({
-  apiKey: '1f403b6cee9f4ab8b01dbcca67ff3a36'
+  apiKey: '9667ec91c3ac444e81d28a6dd4b5e84c'
 })
 
 const particlesParam = {
@@ -20,13 +20,6 @@ const particlesParam = {
         enable: true,
         value_area: 800
       }
-    },
-    line_linked: {
-      shadow: {
-        enable: true,
-        color: "#3CA9D1",
-        blur: 1
-      }
     }
   }
 }
@@ -35,8 +28,30 @@ class App extends React.Component {
   constructor() {
     super();
     this.state = {
-      input: ''
+      input: '',
+      imageUrl: '',
+      box: {}
     }
+  }
+
+  calculateFaceLocation = (data) => {
+    const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
+    const image = document.getElementById('inputimage');
+    const width = Number(image.width);
+    const height = Number(image.height);
+    console.log(width, height);
+    console.log(clarifaiFace);
+    return {
+      leftCol: clarifaiFace.left_col * width,
+      topRow: clarifaiFace.top_row * height,
+      rightCol: width - (clarifaiFace.right_col * width),
+      bottomRow: height - (clarifaiFace.bottom_row * height)
+    }
+  }
+
+  displayFaceBox = (box) => {
+    console.log(box);
+    this.setState({ box: box });
   }
 
   onInputChange = (event) => {
@@ -44,14 +59,10 @@ class App extends React.Component {
   }
 
   onSubmit = (event) => {
-    app.models.predict(Clarifai.FACE_DETECT_MODEL, "https://samples.clarifai.com/face-det.jpg").then(
-      function (response) {
-        console.log(response.outputs[0].data.regions[0].region_info.bounding_box);
-      },
-      function (err) {
-        // there was an error
-      }
-    );
+    this.setState({ imageUrl: this.state.input })
+    app.models.predict(Clarifai.FACE_DETECT_MODEL, this.state.input)
+      .then((response) => this.displayFaceBox(this.calculateFaceLocation(response)))
+      .catch(err => console.log(err));
   }
 
   render() {
@@ -63,7 +74,7 @@ class App extends React.Component {
         <Logo />
         <Rank />
         <ImageURLForm inputChange={this.onInputChange} onSubmit={this.onSubmit} />
-        <FaceRecognition imageSource={this.state.input} />
+        <FaceRecognition imageSource={this.state.imageUrl} box={this.state.box} />
       </div>
     );
   }
