@@ -6,6 +6,7 @@ import Rank from '../components/rank/Rank';
 import Particles from 'react-particles-js';
 import Clarifai from 'clarifai';
 import FaceRecognition from '../components/face_recognition_box/FaceRecognition';
+import SignIn from '../components/sign_in/SignIn';
 import '../containers/App.css';
 
 const app = new Clarifai.App({
@@ -15,11 +16,17 @@ const app = new Clarifai.App({
 const particlesParam = {
   particles: {
     number: {
-      value: 60,
+      value: 80,
       density: {
         enable: true,
         value_area: 800
       }
+    },
+    line_linked: {
+      enable_auto: true,
+      distance: 150,
+      opacity: 0.25,
+      width: 0.5
     }
   }
 }
@@ -30,7 +37,8 @@ class App extends React.Component {
     this.state = {
       input: '',
       imageUrl: '',
-      box: {}
+      box: {},
+      route: 'signin'
     }
   }
 
@@ -39,8 +47,6 @@ class App extends React.Component {
     const image = document.getElementById('inputimage');
     const width = Number(image.width);
     const height = Number(image.height);
-    console.log(width, height);
-    console.log(clarifaiFace);
     return {
       leftCol: clarifaiFace.left_col * width,
       topRow: clarifaiFace.top_row * height,
@@ -50,7 +56,6 @@ class App extends React.Component {
   }
 
   displayFaceBox = (box) => {
-    console.log(box);
     this.setState({ box: box });
   }
 
@@ -65,16 +70,27 @@ class App extends React.Component {
       .catch(err => console.log(err));
   }
 
+  onRouteChange = (route) => {
+    this.setState({ route: route })
+  }
+
   render() {
     return (
       <div className="App tc">
         <Particles className="particles tc"
           params={particlesParam} />
-        <Navigation />
-        <Logo />
-        <Rank />
-        <ImageURLForm inputChange={this.onInputChange} onSubmit={this.onSubmit} />
-        <FaceRecognition imageSource={this.state.imageUrl} box={this.state.box} />
+        {this.state.route === 'signin' ?
+          <SignIn onRouteChange={this.onRouteChange} /> :
+          (
+            <div>
+              <Navigation onRouteChange={this.onRouteChange} />
+              <Logo />
+              <Rank />
+              <ImageURLForm inputChange={this.onInputChange} onSubmit={this.onSubmit} />
+              <FaceRecognition imageSource={this.state.imageUrl} box={this.state.box} />
+            </div>
+          )
+        }
       </div>
     );
   }
