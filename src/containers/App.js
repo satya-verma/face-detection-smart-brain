@@ -4,18 +4,12 @@ import Logo from '../components/logo/Logo';
 import ImageURLForm from '../components/imageUrlForm/ImageURLForm';
 import Rank from '../components/rank/Rank';
 import Particles from 'react-particles-js';
-import Clarifai from 'clarifai';
 import FaceRecognition from '../components/face_recognition_box/FaceRecognition';
 import SignIn from '../components/sign_in/SignIn';
 import Register from '../components/register/Register';
 import '../containers/App.css';
 
-// initialising access for our app to Clarifai api with our Clarifai api key.
-const app = new Clarifai.App({
-  apiKey: '9667ec91c3ac444e81d28a6dd4b5e84c'
-})
-
-// live particles component background
+// live particles component parameters (background)
 const particlesParam = {
   particles: {
     number: {
@@ -34,15 +28,41 @@ const particlesParam = {
   }
 }
 
+// states object
+const initalState = {
+  input: '',        // url input 
+  imageUrl: '',     // url input change
+  box: {},          // pixel values for bounding-box
+  route: 'signin',   // screens: signIn, signup & home
+  user: {
+    id: '',
+    name: '',
+    email: '',
+    password: '',
+    entries: 0,
+    joined: ''
+  }
+}
+
+// intialising states in the constructor
 class App extends React.Component {
   constructor() {
     super();
-    this.state = {
-      input: '',        // url input 
-      imageUrl: '',     // url input change
-      box: {},          // pixel values for bounding-box
-      route: 'signin'   // screens: signIn, signup & home
-    }
+    this.state = initalState;
+  }
+
+  // load user data into state
+  loadUser = (data) => {
+    this.setState({
+      user: {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        entries: data.entries,
+        joined: data.joined
+      }
+    });
   }
 
   /* 
@@ -84,18 +104,43 @@ class App extends React.Component {
   */
   onSubmit = (event) => {
     const { input } = this.state;
-    this.setState({ imageUrl: input })
-    app.models.predict(Clarifai.FACE_DETECT_MODEL, input)
-      .then((response) => this.displayFaceBox(this.calculateFaceLocation(response)))
+    this.setState({ imageUrl: input });
+    fetch(' https://peaceful-atoll-97400.herokuapp.com/imageurl', {
+      method: 'post',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        input: input
+      })
+    })
+      .then((response) => response.json())
+      .then(response => {
+        if (response) {
+          fetch('https://peaceful-atoll-97400.herokuapp.com/image', {
+            method: 'put',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: this.state.user.id
+            })
+          }).then(response => response.json())
+            .then(count => {
+              this.setState(Object.assign(this.state.user, { entries: count }))
+            })
+            .catch(console.log)
+        }
+        this.displayFaceBox(this.calculateFaceLocation(response))
+      })
       .catch(err => console.log(err));
   }
 
-  // this function changes the state of route
+  // this function changes the 'route' state
   onRouteChange = (route) => {
-    this.setState({ route: route })
+    if (route === 'signin') {
+      this.setState(initalState);
+    }
+    this.setState({ route: route });
   }
 
-    
+
   //receives a {state.route} parameter and switches between signIn, signUp and home screen components
   renderSwitch = (param) => {
     const { imageUrl, box } = this.state;
@@ -105,15 +150,15 @@ class App extends React.Component {
           <div>
             <Navigation onRouteChange={this.onRouteChange} />
             <Logo />
-            <Rank />
+            <Rank name={this.state.user.name} entries={this.state.user.entries} />
             <ImageURLForm inputChange={this.onInputChange} onSubmit={this.onSubmit} />
             <FaceRecognition imageSource={imageUrl} box={box} />
           </div>
         );
       case 'signin':
-        return (<SignIn onRouteChange={this.onRouteChange} />);
+        return (<SignIn onRouteChange={this.onRouteChange} loadUser={this.loadUser} />);
       case 'register':
-        return (<Register onRouteChange={this.onRouteChange} />);
+        return (<Register onRouteChange={this.onRouteChange} loadUser={this.loadUser} />);
       default: break;
     }
   }
@@ -124,7 +169,8 @@ class App extends React.Component {
     return (
       <div className="App tc">
         <Particles className="particles tc"
-          params={particlesParam} />
+          params={particlesParam}
+        />
         {this.renderSwitch(route)}
       </div>
     );
