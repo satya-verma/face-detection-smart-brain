@@ -1,5 +1,5 @@
 # Face-Detection-Smart-Brain
-Enter any image url in the app and it will detect faces in the picture.
+Web App built on react.js where a user Enter any image url in the app and it detects faces in the picture.
 
 # How-To-use
 Node.js - npm required
